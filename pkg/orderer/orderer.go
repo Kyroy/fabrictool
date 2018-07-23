@@ -85,6 +85,17 @@ func LastBlock(blockStoreProvider blkstorage.BlockStoreProvider, ledger string) 
 }
 
 func CreateNoOpBlock(lastBlock *common.Block, kafkaMetadata *orderer.KafkaMetadata) (*common.Block, error) {
+	var err error
+	envelope := &common.Envelope{}
+	if err = proto.Unmarshal(lastBlock.Data.Data[0], envelope); err != nil {
+		return nil, fmt.Errorf("error reconstructing envelope(%s)", err)
+	}
+	chdr, err := utils.ChannelHeader(envelope)
+	//chdr, err := utils.UnmarshalChannelHeader(payload.Header.ChannelHeader)
+	if err != nil {
+		return nil, err
+	}
+
 	block := common.NewBlock(lastBlock.Header.Number+1, lastBlock.Header.DataHash)
 	//for _, tx := range transactions {
 	//	txEnvBytes, err := proto.Marshal(tx)
@@ -98,7 +109,8 @@ func CreateNoOpBlock(lastBlock *common.Block, kafkaMetadata *orderer.KafkaMetada
 			Payload: utils.MarshalOrPanic(&common.Payload{
 				Header: &common.Header{
 					ChannelHeader: utils.MarshalOrPanic(&common.ChannelHeader{
-						Type: int32(common.HeaderType_MESSAGE),
+						Type:      int32(common.HeaderType_MESSAGE),
+						ChannelId: chdr.ChannelId,
 					}),
 				},
 			}),
