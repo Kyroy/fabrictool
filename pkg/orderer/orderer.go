@@ -16,12 +16,12 @@ func BlockStoreProdiver(ordererPath string) blkstorage.BlockStoreProvider {
 	factory.InitFactories(nil)
 
 	attrsToIndex := []blkstorage.IndexableAttr{
-		blkstorage.IndexableAttrBlockHash,
+		//blkstorage.IndexableAttrBlockHash,
 		blkstorage.IndexableAttrBlockNum,
-		blkstorage.IndexableAttrTxID,
-		blkstorage.IndexableAttrBlockNumTranNum,
-		blkstorage.IndexableAttrBlockTxID,
-		blkstorage.IndexableAttrTxValidationCode,
+		//blkstorage.IndexableAttrTxID,
+		//blkstorage.IndexableAttrBlockNumTranNum,
+		//blkstorage.IndexableAttrBlockTxID,
+		//blkstorage.IndexableAttrTxValidationCode,
 	}
 	indexConfig := &blkstorage.IndexConfig{AttrsToIndex: attrsToIndex}
 	blockStoreProvider := fsblkstorage.NewProvider(
@@ -87,9 +87,22 @@ func LastBlock(blockStoreProvider blkstorage.BlockStoreProvider, ledger string) 
 func CreateNoOpBlock(lastBlock *common.Block, kafkaMetadata *orderer.KafkaMetadata) (*common.Block, error) {
 	block := common.NewBlock(lastBlock.Header.Number+1, lastBlock.Header.DataHash)
 	//for _, tx := range transactions {
-	//	txEnvBytes, _ := proto.Marshal(tx)
+	//	txEnvBytes, err := proto.Marshal(tx)
+	//	if err != nil {
+	//		return nil, err
+	//	}
 	//	block.Data.Data = append(block.Data.Data, txEnvBytes)
 	//}
+	block.Data.Data = append(block.Data.Data,
+		utils.MarshalOrPanic(&common.Envelope{
+			Payload: utils.MarshalOrPanic(&common.Payload{
+				Header: &common.Header{
+					ChannelHeader: utils.MarshalOrPanic(&common.ChannelHeader{
+						Type: int32(common.HeaderType_MESSAGE),
+					}),
+				},
+			}),
+		}))
 	block.Header.DataHash = block.Data.Hash()
 	utils.CopyBlockMetadata(lastBlock, block)
 
