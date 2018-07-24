@@ -14,7 +14,7 @@ var ledgerCmd = &cobra.Command{
 	Short: "This is a ledger command",
 	Long:  "A super long version or a random description",
 	Run: func(cmd *cobra.Command, args []string) {
-		provider := orderer.BlockStoreProdiver(ordererDir)
+		provider := orderer.BlockStoreProdiver(ordererDir, "")
 		orderer.ListLedgers(provider)
 	},
 }

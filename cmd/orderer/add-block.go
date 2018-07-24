@@ -6,12 +6,24 @@ import (
 	"strconv"
 )
 
-var ledger string
+var (
+	ledger string
+	mspID  string
+	mspDir string
+)
 
 func init() {
 	ledgerCmd.AddCommand(addBlockCmd)
 	addBlockCmd.PersistentFlags().StringVar(&ledger, "ledger", "", "Ledger name.")
 	if err := addBlockCmd.MarkPersistentFlagRequired("ledger"); err != nil {
+		panic(err)
+	}
+	addBlockCmd.PersistentFlags().StringVar(&mspID, "mspID", "", "mspID name.")
+	if err := addBlockCmd.MarkPersistentFlagRequired("mspID"); err != nil {
+		panic(err)
+	}
+	addBlockCmd.PersistentFlags().StringVar(&mspDir, "mspDir", "", "mspDir name.")
+	if err := addBlockCmd.MarkPersistentFlagRequired("mspDir"); err != nil {
 		panic(err)
 	}
 }
@@ -26,7 +38,7 @@ var addBlockCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		provider := orderer.BlockStoreProdiver(ordererDir)
+		provider := orderer.BlockStoreProdiver(ordererDir, mspDir)
 		block, err := orderer.LastBlock(provider, ledger)
 		if err != nil {
 			return err
@@ -36,7 +48,7 @@ var addBlockCmd = &cobra.Command{
 			return err
 		}
 		kafkaMetadata.LastOffsetPersisted = int64(lastOffsetPersisted)
-		block, err = orderer.CreateNoOpBlock(block, kafkaMetadata)
+		block, err = orderer.CreateNoOpBlock(block, kafkaMetadata, mspID, mspDir)
 		if err != nil {
 			return err
 		}
