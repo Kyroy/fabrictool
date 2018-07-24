@@ -1,4 +1,4 @@
-package orderer
+package cmd
 
 import (
 	"github.com/kyroy/fabrictool/pkg/orderer"
@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	Cmd.AddCommand(ledgerCmd)
+	ordererCommand.AddCommand(ledgerCmd)
 }
 
 var ledgerCmd = &cobra.Command{
@@ -15,6 +15,7 @@ var ledgerCmd = &cobra.Command{
 	Long:  "A super long version or a random description",
 	Run: func(cmd *cobra.Command, args []string) {
 		provider := orderer.BlockStoreProdiver(ordererDir, "")
+		defer provider.Close()
 		orderer.ListLedgers(provider)
 	},
 }

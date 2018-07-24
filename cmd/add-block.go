@@ -1,4 +1,4 @@
-package orderer
+package cmd
 
 import (
 	"github.com/kyroy/fabrictool/pkg/orderer"
@@ -39,11 +39,12 @@ var addBlockCmd = &cobra.Command{
 			return err
 		}
 		provider := orderer.BlockStoreProdiver(ordererDir, mspDir)
+		defer provider.Close()
 		block, err := orderer.LastBlock(provider, ledger)
 		if err != nil {
 			return err
 		}
-		kafkaMetadata, err := orderer.LedgerKafkaMetadata(block, ledger)
+		kafkaMetadata, err := orderer.LedgerKafkaMetadata(block)
 		if err != nil {
 			return err
 		}

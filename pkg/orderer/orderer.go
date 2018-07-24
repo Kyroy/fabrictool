@@ -23,26 +23,18 @@ func BlockStoreProdiver(ordererPath, mspPath string) blkstorage.BlockStoreProvid
 		x.SwOpts.Ephemeral = false
 		x.SwOpts.FileKeystore = &factory.FileKeystoreOpts{
 			KeyStorePath: path.Join(mspPath, "keystore"),
-			//KeyStorePath: "/Users/d070098/Projects/scp-bc-fabric-node-manager/test/fixtures/node1/crypto/ordererOrganizations/sap.com/orderers/orderer0.sap.com/msp/keystore",
 		}
 	}
 	if err := factory.InitFactories(x); err != nil {
 		panic(err)
 	}
 
-	attrsToIndex := []blkstorage.IndexableAttr{
-		//blkstorage.IndexableAttrBlockHash,
+	indexConfig := &blkstorage.IndexConfig{AttrsToIndex: []blkstorage.IndexableAttr{
 		blkstorage.IndexableAttrBlockNum,
-		//blkstorage.IndexableAttrTxID,
-		//blkstorage.IndexableAttrBlockNumTranNum,
-		//blkstorage.IndexableAttrBlockTxID,
-		//blkstorage.IndexableAttrTxValidationCode,
-	}
-	indexConfig := &blkstorage.IndexConfig{AttrsToIndex: attrsToIndex}
+	}}
 	blockStoreProvider := fsblkstorage.NewProvider(
 		fsblkstorage.NewConf(ordererPath, ledgerconfig.GetMaxBlockfileSize()),
 		indexConfig)
-	//defer blockStoreProvider.Close()
 	return blockStoreProvider
 }
 
@@ -62,7 +54,7 @@ func ListLedgers(blockStoreProvider blkstorage.BlockStoreProvider) {
 			fmt.Println(ledger, err)
 			continue
 		}
-		kafkaMetadata, err := LedgerKafkaMetadata(block, ledger)
+		kafkaMetadata, err := LedgerKafkaMetadata(block)
 		if err != nil {
 			fmt.Println(ledger, err)
 			continue
@@ -71,7 +63,7 @@ func ListLedgers(blockStoreProvider blkstorage.BlockStoreProvider) {
 	}
 }
 
-func LedgerKafkaMetadata(block *common.Block, ledger string) (*orderer.KafkaMetadata, error) {
+func LedgerKafkaMetadata(block *common.Block) (*orderer.KafkaMetadata, error) {
 	metadata, err := utils.GetMetadataFromBlock(block, common.BlockMetadataIndex_ORDERER)
 	if err != nil {
 		return nil, fmt.Errorf("failed to GetMetadataFromBlock: %v", err)
@@ -114,13 +106,6 @@ func CreateNoOpBlock(lastBlock *common.Block, kafkaMetadata *orderer.KafkaMetada
 	}
 
 	block := common.NewBlock(lastBlock.Header.Number+1, lastBlock.Header.DataHash)
-	//for _, tx := range transactions {
-	//	txEnvBytes, err := proto.Marshal(tx)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	block.Data.Data = append(block.Data.Data, txEnvBytes)
-	//}
 	block.Data.Data = append(block.Data.Data,
 		utils.MarshalOrPanic(&common.Envelope{
 			Payload: utils.MarshalOrPanic(&common.Payload{

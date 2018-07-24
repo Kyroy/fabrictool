@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/kyroy/fabrictool/cmd/orderer"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -11,7 +10,6 @@ var Verbose bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
-	rootCmd.AddCommand(orderer.Cmd)
 }
 
 var rootCmd = &cobra.Command{
